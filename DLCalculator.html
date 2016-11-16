@@ -1,16 +1,12 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-
 var dp = new Array(7).fill(0);//pressure drop in the section, read from input
 var dp0 = new Array(7).fill(0);//pressure difference from the first section, calculate from dp
 var pabs = new Array(7).fill(0);//gauge pressures, calculate from resulting p0 and dp0
 var CvL = new Array(7).fill(0);//leak coefficient, read from input
 var cfmL = new Array(7).fill(0);//leakage, calculate from guessing p0 and dp0 and CvL
 var iter = 0, residual = 0, totalDp = 0;
-
 function updateParameters(){
-
-
     dp[1] = Number(document.getElementById('DP1Text').value);
     dp[2] = Number(document.getElementById('DP2Text').value);
     dp[3] = Number(document.getElementById('DP3Text').value);
@@ -24,9 +20,6 @@ function updateParameters(){
     CvL[4] = Number(document.getElementById('Leak4Text').value);
     CvL[5] = Number(document.getElementById('Leak5Text').value);
     CvL[6] = Number(document.getElementById('Leak6Text').value);
-
-
-
     totalDp = 0;
     for(i = 0; i < 7; i++){
       totalDp += dp[i];
@@ -34,9 +27,7 @@ function updateParameters(){
         dp0[i]=dp0[i-1]+dp[i];
       }
     }
-
 }
-
 function massBalance(p1){
     var p_local;
     var massResidual = 0;
@@ -47,7 +38,6 @@ function massBalance(p1){
     }
     return massResidual;
 }
-
 function opt(p0,tolerance,maxIter,tau){
     if(tolerance===undefined){
       tolerance = 1e-5;
@@ -64,12 +54,10 @@ function opt(p0,tolerance,maxIter,tau){
     }
     return p00;
 }
-
 function updateResults(){
   for(i = 0; i < 7; i++){
     pabs[i] = pabs[0]-dp0[i];
   }
-
   document.getElementById('totDP').innerHTML = "Total Pressure Drop: "+totalDp.toString()+".";
   document.getElementById('residual').innerHTML = "Final Mass Balance Residual: "+residual.toString()+".";
   document.getElementById('t_p0').innerHTML = pabs[0].toString();
@@ -86,10 +74,7 @@ function updateResults(){
   document.getElementById('t_m4').innerHTML = cfmL[4].toString();
   document.getElementById('t_m5').innerHTML = cfmL[5].toString();
   document.getElementById('t_m6').innerHTML = cfmL[6].toString();
-
-
 }
-
 google.charts.load('current', {'packages':['corechart','table']});
 google.charts.setOnLoadCallback(drawVisualization);
 function drawVisualization() {
@@ -98,20 +83,15 @@ function drawVisualization() {
   data.addColumn('string', 'Position');
   data.addColumn('number','Pressure');
   data.addColumn('number','Flow Rate');
-
   var positions = new Array("Blower->RGrill","RGrill->Rear Seal","Seal->FGrill","FGrill->Filter","Filter->Evap","Evap->Cond","Cond->Blower");
-
   // var pos = new Array(1,2,3,4,5,6,7);
-
   data.addRows(7);
-
   for(i = 0; i < 7; i++){
     data.setCell(i,0,positions[i]);
     // data.setCell(i,0,pos[i]);
     data.setCell(i,1,pabs[i]);
     data.setCell(i,2,cfmL[i]);
   }
-
   var pmax = 0., cfmmax = 0.;
   for(i = 0; i < 7; i++){
     pmax = (Math.abs(pabs[i])>pmax)?Math.abs(pabs[i]):pmax;
@@ -132,38 +112,27 @@ function drawVisualization() {
   var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
   chart.draw(data, options);
 }
-
 function calculate(){
-
     updateParameters();
     pabs[0] = opt(totalDp/2);
-
     updateResults();
     drawVisualization();
-
-
-
 }
-
 function updateText(bar, text){
     text.value=bar.value;
     calculate();
 }
-
 function updateBar(text, bar){
     bar.value=text.value;
     calculate();
 }
-
 function start(){
-
   document.getElementById('DP1Text').defaultValue = "0.18";
   document.getElementById('DP2Text').defaultValue = "0.83";
   document.getElementById('DP3Text').defaultValue = "0.18";
   document.getElementById('DP4Text').defaultValue = "0.15";
   document.getElementById('DP5Text').defaultValue = "0.15";
   document.getElementById('DP6Text').defaultValue = "0.15";
-
   document.getElementById('Leak0Text').defaultValue = "4";
   document.getElementById('Leak1Text').defaultValue = "5";
   document.getElementById('Leak2Text').defaultValue = "30";
@@ -171,19 +140,14 @@ function start(){
   document.getElementById('Leak4Text').defaultValue = "3";
   document.getElementById('Leak5Text').defaultValue = "8";
   document.getElementById('Leak6Text').defaultValue = "8";
-
 }
-
 function updateBars(){
-
     updateBar(document.getElementById('DP1Text'),document.getElementById('DP1Bar'));
     updateBar(document.getElementById('DP2Text'),document.getElementById('DP2Bar'));
     updateBar(document.getElementById('DP3Text'),document.getElementById('DP3Bar'));
     updateBar(document.getElementById('DP4Text'),document.getElementById('DP4Bar'));
     updateBar(document.getElementById('DP5Text'),document.getElementById('DP5Bar'));
     updateBar(document.getElementById('DP6Text'),document.getElementById('DP6Bar'));
-
-
     updateBar(document.getElementById('Leak0Text'),document.getElementById('Leak0Bar'));
     updateBar(document.getElementById('Leak1Text'),document.getElementById('Leak1Bar'));
     updateBar(document.getElementById('Leak2Text'),document.getElementById('Leak2Bar'));
@@ -191,9 +155,7 @@ function updateBars(){
     updateBar(document.getElementById('Leak4Text'),document.getElementById('Leak4Bar'));
     updateBar(document.getElementById('Leak5Text'),document.getElementById('Leak5Bar'));
     updateBar(document.getElementById('Leak6Text'),document.getElementById('Leak6Bar'));
-
 }
-
 window.onload = start;
 </script>
 
