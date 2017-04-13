@@ -72,7 +72,7 @@ function updateResults(){
     pabs[i] = pabs[0]-dp0[i];
   }
 
-  document.getElementById('totDP').innerHTML = "Total Pressure Drop (kPa): "+totalDp.toLocaleString('en-US', {minimumFractionDigits: 3})+".";
+  document.getElementById('totDP').innerHTML = "Total Pressure Drop (inWC): "+totalDp.toLocaleString('en-US', {minimumFractionDigits: 3})+".";
   document.getElementById('residual').innerHTML = "Final Mass Balance Residual: "+residual.toExponential().toString()+".";
   document.getElementById('t_p0').innerHTML = pabs[0].toLocaleString('en-US', {minimumFractionDigits: 3});
   document.getElementById('t_p1').innerHTML = pabs[1].toLocaleString('en-US', {minimumFractionDigits: 3});
@@ -126,8 +126,8 @@ function drawVisualization() {
     title : 'Pressure and Leakage along the cycle',
     hAxis: {title: 'Position'},
     vAxes:{
-      0:{title: 'Guage Pressure', 'minValue':-pmax, 'maxValue':pmax},
-      1:{title: 'Flow Rate', 'minValue':-cfmmax, 'maxValue':cfmmax}
+      0:{title: 'Guage Pressure [inWC]', 'minValue':-pmax, 'maxValue':pmax},
+      1:{title: 'Flow Rate [CFM]', 'minValue':-cfmmax, 'maxValue':cfmmax}
       },
     series: {
       0: {type: 'line', targetAxisIndex : 0},
@@ -162,22 +162,47 @@ function updateBar(text, bar){
 
 function start(){
 
-  document.getElementById('DP1Text').defaultValue = "0.15";
-  document.getElementById('DP2Text').defaultValue = "0.15";
-  document.getElementById('DP3Text').defaultValue = "0.01";
-  document.getElementById('DP4Text').defaultValue = "0.18";
-  document.getElementById('DP5Text').defaultValue = "0.83";
-  document.getElementById('DP6Text').defaultValue = "0.18";
-  document.getElementById('DP7Text').defaultValue = "0.15";
+  document.getElementById('DP1Text').defaultValue = "0.19";
+  document.getElementById('DP2Text').defaultValue = "0.35";
+  document.getElementById('DP3Text').defaultValue = "0.33";
+  document.getElementById('DP4Text').defaultValue = "0.49";
+  document.getElementById('DP5Text').defaultValue = "0.13";
+  document.getElementById('DP6Text').defaultValue = "0.13";
+  document.getElementById('DP7Text').defaultValue = "0.58";
 
-  document.getElementById('Leak0Text').defaultValue = "3";
-  document.getElementById('Leak1Text').defaultValue = "8";
-  document.getElementById('Leak2Text').defaultValue = "4";
-  document.getElementById('Leak3Text').defaultValue = "4";
-  document.getElementById('Leak4Text').defaultValue = "4";
-  document.getElementById('Leak5Text').defaultValue = "5";
-  document.getElementById('Leak6Text').defaultValue = "10";
-  document.getElementById('Leak7Text').defaultValue = "3";
+  document.getElementById('Leak0Text').defaultValue = "0";
+  document.getElementById('Leak1Text').defaultValue = "14.5";
+  document.getElementById('Leak2Text').defaultValue = "16.5";
+  document.getElementById('Leak3Text').defaultValue = "34.8";
+  document.getElementById('Leak4Text').defaultValue = "19.2";
+  document.getElementById('Leak5Text').defaultValue = "18.6";
+  document.getElementById('Leak6Text').defaultValue = "4.3";
+  document.getElementById('Leak7Text').defaultValue = "6.3";
+
+  updateBars();
+
+}
+
+function resetToDefault(){
+
+  document.getElementById('DP1Text').value = "0.19";
+  document.getElementById('DP2Text').value = "0.35";
+  document.getElementById('DP3Text').value = "0.33";
+  document.getElementById('DP4Text').value = "0.49";
+  document.getElementById('DP5Text').value = "0.13";
+  document.getElementById('DP6Text').value = "0.13";
+  document.getElementById('DP7Text').value = "0.58";
+
+  document.getElementById('Leak0Text').value = "0";
+  document.getElementById('Leak1Text').value = "14.5";
+  document.getElementById('Leak2Text').value = "16.5";
+  document.getElementById('Leak3Text').value = "34.8";
+  document.getElementById('Leak4Text').value = "19.2";
+  document.getElementById('Leak5Text').value = "18.6";
+  document.getElementById('Leak6Text').value = "4.3";
+  document.getElementById('Leak7Text').value = "6.3";
+
+  updateBars();
 
 }
 
@@ -201,6 +226,7 @@ function updateBars(){
     updateBar(document.getElementById('Leak6Text'),document.getElementById('Leak6Bar'));
     updateBar(document.getElementById('Leak7Text'),document.getElementById('Leak7Bar'));
 
+
 }
 
 window.onload = start;
@@ -217,10 +243,10 @@ window.onload = start;
     <br />
     <br />
     <div id="chart_div" style="width: 900px; height: 500px;"></div>
-    <button type="button" onclick="updateBars()">Start with Default Values</button>
+    <button type="button" onclick="resetToDefault()">Start with Default Values</button>
     <form class="input" method="post">
       <h2>Inputs:</h2>
-      <h3>Pressure Drops (kPa):</h3>
+      <h3>Pressure Drops (inWC):</h3>
       Evaporator: <input id="DP1Text" type="number" name="DP1Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP1Bar'))" onclick="updateBar(this,document.getElementById('DP1Bar'))" min="0" max="1">
       <input id="DP1Bar" type="range" name="DP1Bar" step="0.05" onclick="updateText(this,document.getElementById('DP1Text'))" min="0" max="1"><br>
       Condenser: <input id="DP2Text" type="number" name="DP2Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP2Bar'))" onclick="updateBar(this,document.getElementById('DP2Bar'))" min="0" max="1">
@@ -257,12 +283,12 @@ window.onload = start;
       <br />
       <h2>Results:</h2>
       <p id = "residual">Residual is:</p>
-      <p id = "totDP">Total Pressure Drop (kPa):</p>
+      <p id = "totDP">Total Pressure Drop (inWC):</p>
       <h3>Guage Pressures and Leakages:</h3>
       <table style="width:50%">
         <tr>
           <th>Position</th>
-          <th>Guage Pressure (kPa)</th>
+          <th>Guage Pressure (inWC)</th>
           <th>Leakage (CFM)</th>
         </tr>
         <tr>
