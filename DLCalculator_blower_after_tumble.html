@@ -7,6 +7,8 @@ var pabs = new Array(8).fill(0);//gauge pressures, calculate from resulting p0 a
 var CvL = new Array(8).fill(0);//leak coefficient, read from input
 var cfmL = new Array(8).fill(0);//leakage, calculate from guessing p0 and dp0 and CvL
 var iter = 0, residual = 0, totalDp = 0;
+var pMax = 0., pMin = 0., fMax = 0., fMin = 0.;
+var isYAxisAuto = true;
 
 function updateParameters(){
 
@@ -96,6 +98,7 @@ function updateResults(){
 
 google.charts.load('current', {'packages':['corechart','table']});
 google.charts.setOnLoadCallback(drawVisualization);
+
 function drawVisualization() {
   var data = new google.visualization.DataTable();
   // data.addColumn('number','pos');
@@ -117,24 +120,20 @@ function drawVisualization() {
     data.setCell(i,2,cfmL[i]);
   }
 
-  var pmax = 0., cfmmax = 0.;
-  for(i = 0; i < 8; i++){
-    pmax = (Math.abs(pabs[i])>pmax)?Math.abs(pabs[i]):pmax;
-    cfmmax = (Math.abs(cfmL[i])>cfmmax)?Math.abs(cfmL[i]):cfmmax;
-  }
+
   var options = {
     title : 'Pressure and Leakage along the cycle',
     hAxis: {title: 'Position'},
     vAxes:{
-      0:{title: 'Guage Pressure [inWC]', 'minValue':-pmax, 'maxValue':pmax},
-      1:{title: 'Flow Rate [CFM]', 'minValue':-cfmmax, 'maxValue':cfmmax}
+      0:{title: 'Guage Pressure [inWC]', viewWindowMode: 'explicit', viewWindow:{max:pMax, min:pMin}},
+      1:{title: 'Flow Rate [CFM]', viewWindowMode: 'explicit', viewWindow:{max:fMax, min:fMin}}
       },
     series: {
       0: {type: 'line', targetAxisIndex : 0},
       1: {type: 'bars', targetAxisIndex : 1}
     }
   };
-  var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
+  var chart = new google.visualization.ComboChart(document.getElementById('chart'));
   chart.draw(data, options);
 }
 
@@ -145,8 +144,6 @@ function calculate(){
 
     updateResults();
     drawVisualization();
-
-
 
 }
 
@@ -162,24 +159,8 @@ function updateBar(text, bar){
 
 function start(){
 
-  document.getElementById('DP1Text').defaultValue = "0.19";
-  document.getElementById('DP2Text').defaultValue = "0.35";
-  document.getElementById('DP3Text').defaultValue = "0.33";
-  document.getElementById('DP4Text').defaultValue = "0.49";
-  document.getElementById('DP5Text').defaultValue = "0.13";
-  document.getElementById('DP6Text').defaultValue = "0.13";
-  document.getElementById('DP7Text').defaultValue = "0.58";
-
-  document.getElementById('Leak0Text').defaultValue = "0";
-  document.getElementById('Leak1Text').defaultValue = "14.5";
-  document.getElementById('Leak2Text').defaultValue = "16.5";
-  document.getElementById('Leak3Text').defaultValue = "34.8";
-  document.getElementById('Leak4Text').defaultValue = "19.2";
-  document.getElementById('Leak5Text').defaultValue = "18.6";
-  document.getElementById('Leak6Text').defaultValue = "4.3";
-  document.getElementById('Leak7Text').defaultValue = "6.3";
-
-  updateBars();
+  resetToDefault();
+  checkYAxisAuto();
 
 }
 
@@ -229,6 +210,69 @@ function updateBars(){
 
 }
 
+function manualUpdateYAxis(){
+
+  document.getElementById('manualButton').checked = true;
+
+  pMax = document.getElementById('pMax').value;
+  pMin = document.getElementById('pMin').value;
+  fMax = document.getElementById('fMax').value;
+  fMin = document.getElementById('fMin').value;
+
+  drawVisualization();
+}
+
+function checkYAxisAuto(){
+
+  document.getElementById('pMax').disabled = true;
+  document.getElementById('fMax').disabled = true;
+  document.getElementById('pMin').disabled = true;
+  document.getElementById('fMin').disabled = true;
+
+  pMax = 0;
+  fMax = 0;
+  pMin = 0;
+  fMin = 0;
+  for(i = 0; i < 8; i++){
+      pMax = (pabs[i]>pMax)?pabs[i]:pMax;
+      fMax = (cfmL[i]>fMax)?cfmL[i]:fMax;
+      pMin = (pabs[i]<pMin)?pabs[i]:pMin;
+      fMin = (cfmL[i]<fMin)?cfmL[i]:fMin;
+  }
+
+  isYAxisAuto = true;
+  drawVisualization();
+}
+
+function checkYAxisManual(){
+
+  document.getElementById('pMax').disabled = false;
+  document.getElementById('fMax').disabled = false;
+  document.getElementById('pMin').disabled = false;
+  document.getElementById('fMin').disabled = false;
+
+  if(isYAxisAuto){
+    for(i = 0; i < 8; i++){
+        pMax = (pabs[i]>pMax)?pabs[i]:pMax;
+        fMax = (cfmL[i]>fMax)?cfmL[i]:fMax;
+        pMin = (pabs[i]<pMin)?pabs[i]:pMin;
+        fMin = (cfmL[i]<fMin)?cfmL[i]:fMin;
+    }
+    document.getElementById('pMax').value = pMax;
+    document.getElementById('pMin').value = pMin;
+    document.getElementById('fMax').value = fMax;
+    document.getElementById('fMin').value = fMin;
+  }
+
+  isYAxisAuto = false;
+  drawVisualization();
+}
+
+
+function test(){
+  pMax
+}
+
 window.onload = start;
 </script>
 
@@ -237,55 +281,80 @@ window.onload = start;
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" >
   <head>
-    <h1>Dryer Leakage Calculator (Blower after Tumble)</h1>
+  <style type="text/css">
+  #container {height: 50%; width:100%; font-size: 0;}
+  #chart_div, #control_div {display: inline-block; *display: inline; zoom: 1; vertical-align: top}
+  #chart_div {width:80%;font-size: 14px; }
+  #chart {position: relative;font-size: 14px; width: 95%; height: 80%;}
+  #control_div {width:20%;font-size: 18px;}
+  #result_div {height:50%; width:100%; vertical-align: bottom; font-size: 18px;}
+  #residual, #totDP {font-size: 12px;}
+  #resultTable, #th, #td {text-align: center; border: 1px solid black; border-collapse: collapse;}
+  </style>
   </head>
   <body>
+    <h1>Dryer Leakage Calculator (Blower after Tumble)</h1>
     <br />
-    <br />
-    <div id="chart_div" style="width: 900px; height: 500px;"></div>
-    <button type="button" onclick="resetToDefault()">Start with Default Values</button>
-    <form class="input" method="post">
-      <h2>Inputs:</h2>
-      <h3>Pressure Drops (inWC):</h3>
-      Evaporator: <input id="DP1Text" type="number" name="DP1Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP1Bar'))" onclick="updateBar(this,document.getElementById('DP1Bar'))" min="0" max="1">
-      <input id="DP1Bar" type="range" name="DP1Bar" step="0.05" onclick="updateText(this,document.getElementById('DP1Text'))" min="0" max="1"><br>
-      Condenser: <input id="DP2Text" type="number" name="DP2Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP2Bar'))" onclick="updateBar(this,document.getElementById('DP2Bar'))" min="0" max="1">
-      <input id="DP2Bar" type="range" name="DP2Bar" step="0.05" onclick="updateText(this,document.getElementById('DP2Text'))" min="0" max="1"><br>
-      Heater: <input id="DP3Text" type="number" step="0.05" name="DP3Text" onkeyup="updateBar(this,document.getElementById('DP3Bar'))" onclick="updateBar(this,document.getElementById('DP3Bar'))" min="0" max="1">
-      <input id="DP3Bar" type="range" name="DP3Bar" step="0.05" onclick="updateText(this,document.getElementById('DP3Text'))" min="0" max="1"><br>
-      Rear Grill: <input id="DP4Text" type="number" step="0.05" name="DP4Text" onkeyup="updateBar(this,document.getElementById('DP4Bar'))" onclick="updateBar(this,document.getElementById('DP4Bar'))" min="0" max="1">
-      <input id="DP4Bar" type="range" name="DP4Bar" step="0.05" onclick="updateText(this,document.getElementById('DP4Text'))" min="0" max="1"><br>
-      Drum: <input id="DP5Text" type="number" step="0.05" name="DP5Text" onkeyup="updateBar(this,document.getElementById('DP5Bar'))" onclick="updateBar(this,document.getElementById('DP5Bar'))" min="0" max="1">
-      <input id="DP5Bar" type="range" name="DP5Bar" step="0.05" onclick="updateText(this,document.getElementById('DP5Text'))" min="0" max="1"><br>
-      Front Grill: <input id="DP6Text" type="number" step="0.05" name="DP6Text" onkeyup="updateBar(this,document.getElementById('DP6Bar'))" onclick="updateBar(this,document.getElementById('DP6Bar'))" min="0" max="1">
-      <input id="DP6Bar" type="range" name="DP6Bar" step="0.05" onclick="updateText(this,document.getElementById('DP6Text'))" min="0" max="1"><br>
-      Lint Filter: <input id="DP7Text" type="number" step="0.05" name="DP7Text" onkeyup="updateBar(this,document.getElementById('DP7Bar'))" onclick="updateBar(this,document.getElementById('DP7Bar'))" min="0" max="1">
-      <input id="DP7Bar" type="range" name="DP7Bar" step="0.05" onclick="updateText(this,document.getElementById('DP7Text'))" min="0" max="1"><br>
-      <br />
-      <h3>Leakage Flow Coefficients:</h3>
-      Blower to Evaporator: <input id="Leak0Text" type="number"  name="Leak0Text" onkeyup="updateBar(this,document.getElementById('Leak0Bar'))" onclick="updateBar(this,document.getElementById('Leak0Bar'))" min="0" max="50">
-      <input id="Leak0Bar" type="range" name="Leak0Bar"  onclick="updateText(this,document.getElementById('Leak0Text'))" min="0" max="50"><br>
-      Evaporator to Condenser: <input id="Leak1Text" type="number" name="Leak1Text" onkeyup="updateBar(this,document.getElementById('Leak1Bar'))" onclick="updateBar(this,document.getElementById('Leak1Bar'))" min="0" max="50">
-      <input id="Leak1Bar" type="range" name="Leak1Bar" onclick="updateText(this,document.getElementById('Leak1Text'))" min="0" max="50"><br>
-      Condenser to Heater: <input id="Leak2Text" type="number" name="Leak2Text" onkeyup="updateBar(this,document.getElementById('Leak2Bar'))" onclick="updateBar(this,document.getElementById('Leak2Bar'))" min="0" max="50">
-      <input id="Leak2Bar" type="range" name="Leak2Bar" onclick="updateText(this,document.getElementById('Leak2Text'))" min="0" max="50"><br>
-      Heater to Rear Grill: <input id="Leak3Text" type="number" name="Leak3Text" onkeyup="updateBar(this,document.getElementById('Leak3Bar'))" onclick="updateBar(this,document.getElementById('Leak3Bar'))" min="0" max="50">
-      <input id="Leak3Bar" type="range" name="Leak3Bar" onclick="updateText(this,document.getElementById('Leak3Text'))" min="0" max="50"><br>
-      Rear Grill to Drum (RrSS): <input id="Leak4Text" type="number" name="Leak4Text" onkeyup="updateBar(this,document.getElementById('Leak4Bar'))" onclick="updateBar(this,document.getElementById('Leak4Bar'))" min="0" max="50">
-      <input id="Leak4Bar" type="range" name="Leak4Bar" onclick="updateText(this,document.getElementById('Leak4Text'))" min="0" max="50"><br>
-      Drum (FrSS) to Front Grill: <input id="Leak5Text" type="number" name="Leak5Text" onkeyup="updateBar(this,document.getElementById('Leak5Bar'))" onclick="updateBar(this,document.getElementById('Leak5Bar'))" min="0" max="50">
-      <input id="Leak5Bar" type="range" name="Leak5Bar" onclick="updateText(this,document.getElementById('Leak5Text'))" min="0" max="50"><br>
-      Front Grill to Lint Filter: <input id="Leak6Text" type="number" name="Leak6Text" onkeyup="updateBar(this,document.getElementById('Leak6Bar'))" onclick="updateBar(this,document.getElementById('Leak6Bar'))" min="0" max="50">
-      <input id="Leak6Bar" type="range" name="Leak6Bar" onclick="updateText(this,document.getElementById('Leak6Text'))" min="0" max="50"><br>
-      Lint Filter to Blower: <input id="Leak7Text" type="number" name="Leak7Text" onkeyup="updateBar(this,document.getElementById('Leak7Bar'))" onclick="updateBar(this,document.getElementById('Leak7Bar'))" min="0" max="50">
-      <input id="Leak7Bar" type="range" name="Leak7Bar" onclick="updateText(this,document.getElementById('Leak7Text'))" min="0" max="50"><br>
+    <div id ="container">
+      <div id="chart_div">
+        <div id="chart"></div>
+        <form id="chart_yAxis_control">
+          <h4>Y-Axis Range</h4>
+          <input id="autoButton" type="radio" name="yaxis" value="auto" onclick="checkYAxisAuto()" checked> Automatic<br>
+          <input id="manualButton" type="radio" name="yaxis" value="manual" onclick="checkYAxisManual()"> Customize:<br>
+          Guage Pressure:
+          Max <input id="pMax" type="number" name="pMax" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-1" max="5" disabled>
+          Min <input id="pMin" type="number" name="pMin" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-5" max="1" disabled><br>
+          Flow Rate:
+          Max <input id="fMax" type="number" name="fMax" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-5" max="50" disabled>
+          Min <input id="fMin" type="number" name="fMin" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-50" max="5" disabled>
+        </form>
+      </div>
+      <div id="control_div">
+        <form class="input" method="post">
+          <h3>Inputs</h3>
+          <h4>Pressure Drops [inWC]</h4>
+          Evaporator: <input id="DP1Text" type="number" name="DP1Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP1Bar'))" onclick="updateBar(this,document.getElementById('DP1Bar'))" min="0" max="1"><br>
+          <input id="DP1Bar" type="range" name="DP1Bar" step="0.05" onclick="updateText(this,document.getElementById('DP1Text'))" min="0" max="1"><br>
+          Condenser: <input id="DP2Text" type="number" name="DP2Text" step="0.05" onkeyup="updateBar(this,document.getElementById('DP2Bar'))" onclick="updateBar(this,document.getElementById('DP2Bar'))" min="0" max="1"><br>
+          <input id="DP2Bar" type="range" name="DP2Bar" step="0.05" onclick="updateText(this,document.getElementById('DP2Text'))" min="0" max="1"><br>
+          Heater: <input id="DP3Text" type="number" step="0.05" name="DP3Text" onkeyup="updateBar(this,document.getElementById('DP3Bar'))" onclick="updateBar(this,document.getElementById('DP3Bar'))" min="0" max="1"><br>
+          <input id="DP3Bar" type="range" name="DP3Bar" step="0.05" onclick="updateText(this,document.getElementById('DP3Text'))" min="0" max="1"><br>
+          Rear Grill: <input id="DP4Text" type="number" step="0.05" name="DP4Text" onkeyup="updateBar(this,document.getElementById('DP4Bar'))" onclick="updateBar(this,document.getElementById('DP4Bar'))" min="0" max="1"><br>
+          <input id="DP4Bar" type="range" name="DP4Bar" step="0.05" onclick="updateText(this,document.getElementById('DP4Text'))" min="0" max="1"><br>
+          Drum: <input id="DP5Text" type="number" step="0.05" name="DP5Text" onkeyup="updateBar(this,document.getElementById('DP5Bar'))" onclick="updateBar(this,document.getElementById('DP5Bar'))" min="0" max="1"><br>
+          <input id="DP5Bar" type="range" name="DP5Bar" step="0.05" onclick="updateText(this,document.getElementById('DP5Text'))" min="0" max="1"><br>
+          Front Grill: <input id="DP6Text" type="number" step="0.05" name="DP6Text" onkeyup="updateBar(this,document.getElementById('DP6Bar'))" onclick="updateBar(this,document.getElementById('DP6Bar'))" min="0" max="1"><br>
+          <input id="DP6Bar" type="range" name="DP6Bar" step="0.05" onclick="updateText(this,document.getElementById('DP6Text'))" min="0" max="1"><br>
+          Lint Filter: <input id="DP7Text" type="number" step="0.05" name="DP7Text" onkeyup="updateBar(this,document.getElementById('DP7Bar'))" onclick="updateBar(this,document.getElementById('DP7Bar'))" min="0" max="1"><br>
+          <input id="DP7Bar" type="range" name="DP7Bar" step="0.05" onclick="updateText(this,document.getElementById('DP7Text'))" min="0" max="1"><br>
+          <h4>Leakage Flow Coefficients [CFM/sqrt(inWC)]</h4>
+          Blower to Evaporator: <input id="Leak0Text" type="number"  name="Leak0Text" onkeyup="updateBar(this,document.getElementById('Leak0Bar'))" onclick="updateBar(this,document.getElementById('Leak0Bar'))" min="0" max="50">
+          <input id="Leak0Bar" type="range" name="Leak0Bar"  onclick="updateText(this,document.getElementById('Leak0Text'))" min="0" max="50"><br>
+          Evaporator to Condenser: <input id="Leak1Text" type="number" name="Leak1Text" onkeyup="updateBar(this,document.getElementById('Leak1Bar'))" onclick="updateBar(this,document.getElementById('Leak1Bar'))" min="0" max="50">
+          <input id="Leak1Bar" type="range" name="Leak1Bar" onclick="updateText(this,document.getElementById('Leak1Text'))" min="0" max="50"><br>
+          Condenser to Heater: <input id="Leak2Text" type="number" name="Leak2Text" onkeyup="updateBar(this,document.getElementById('Leak2Bar'))" onclick="updateBar(this,document.getElementById('Leak2Bar'))" min="0" max="50">
+          <input id="Leak2Bar" type="range" name="Leak2Bar" onclick="updateText(this,document.getElementById('Leak2Text'))" min="0" max="50"><br>
+          Heater to Rear Grill: <input id="Leak3Text" type="number" name="Leak3Text" onkeyup="updateBar(this,document.getElementById('Leak3Bar'))" onclick="updateBar(this,document.getElementById('Leak3Bar'))" min="0" max="50">
+          <input id="Leak3Bar" type="range" name="Leak3Bar" onclick="updateText(this,document.getElementById('Leak3Text'))" min="0" max="50"><br>
+          Rear Grill to Drum (RrSS): <input id="Leak4Text" type="number" name="Leak4Text" onkeyup="updateBar(this,document.getElementById('Leak4Bar'))" onclick="updateBar(this,document.getElementById('Leak4Bar'))" min="0" max="50">
+          <input id="Leak4Bar" type="range" name="Leak4Bar" onclick="updateText(this,document.getElementById('Leak4Text'))" min="0" max="50"><br>
+          Drum (FrSS) to Front Grill: <input id="Leak5Text" type="number" name="Leak5Text" onkeyup="updateBar(this,document.getElementById('Leak5Bar'))" onclick="updateBar(this,document.getElementById('Leak5Bar'))" min="0" max="50">
+          <input id="Leak5Bar" type="range" name="Leak5Bar" onclick="updateText(this,document.getElementById('Leak5Text'))" min="0" max="50"><br>
+          Front Grill to Lint Filter: <input id="Leak6Text" type="number" name="Leak6Text" onkeyup="updateBar(this,document.getElementById('Leak6Bar'))" onclick="updateBar(this,document.getElementById('Leak6Bar'))" min="0" max="50">
+          <input id="Leak6Bar" type="range" name="Leak6Bar" onclick="updateText(this,document.getElementById('Leak6Text'))" min="0" max="50"><br>
+          Lint Filter to Blower: <input id="Leak7Text" type="number" name="Leak7Text" onkeyup="updateBar(this,document.getElementById('Leak7Bar'))" onclick="updateBar(this,document.getElementById('Leak7Bar'))" min="0" max="50">
+          <input id="Leak7Bar" type="range" name="Leak7Bar" onclick="updateText(this,document.getElementById('Leak7Text'))" min="0" max="50"><br>
+        </form>
+        <button type="button" onclick="resetToDefault()">Start with Default Values</button>
+        <button type="button" onclick="test()">test!</button>
+      </div>
+    </div>
 
-      <br />
-      <h2>Results:</h2>
-      <p id = "residual">Residual is:</p>
-      <p id = "totDP">Total Pressure Drop (inWC):</p>
-      <h3>Guage Pressures and Leakages:</h3>
-      <table style="width:50%">
+    <div id="result_div">
+    </br>
+      <h3>Results</h3>
+      <table id="resultTable" style="width:50%">
         <tr>
           <th>Position</th>
           <th>Guage Pressure (inWC)</th>
@@ -331,6 +400,11 @@ window.onload = start;
           <td id="t_p7"></td>
           <td id="t_m7"></td>
         </tr>
-    </form>
+      </table>
+    </br>
+      <div id = "residual"></div>
+      <div id = "totDP"></div>
+    </div>
+
   </body>
 </html>
