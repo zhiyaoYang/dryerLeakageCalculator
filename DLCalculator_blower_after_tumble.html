@@ -143,6 +143,10 @@ function calculate(){
     pabs[0] = opt(totalDp/2);
 
     updateResults();
+
+    if(isYAxisAuto){
+      checkYAxisAuto();
+    }
     drawVisualization();
 
 }
@@ -269,10 +273,6 @@ function checkYAxisManual(){
 }
 
 
-function test(){
-  pMax
-}
-
 window.onload = start;
 </script>
 
@@ -303,11 +303,11 @@ window.onload = start;
           <input id="autoButton" type="radio" name="yaxis" value="auto" onclick="checkYAxisAuto()" checked> Automatic<br>
           <input id="manualButton" type="radio" name="yaxis" value="manual" onclick="checkYAxisManual()"> Customize:<br>
           Guage Pressure:
-          Max <input id="pMax" type="number" name="pMax" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-1" max="5" disabled>
-          Min <input id="pMin" type="number" name="pMin" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-5" max="1" disabled><br>
+          Max <input id="pMax" type="number" name="pMax" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="0" max="1.5" disabled>
+          Min <input id="pMin" type="number" name="pMin" step="0.05" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-15" max="0" disabled><br>
           Flow Rate:
-          Max <input id="fMax" type="number" name="fMax" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-5" max="50" disabled>
-          Min <input id="fMin" type="number" name="fMin" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-50" max="5" disabled>
+          Max <input id="fMax" type="number" name="fMax" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="0" max="20" disabled>
+          Min <input id="fMin" type="number" name="fMin" step="0.5" onkeyup="manualUpdateYAxis()" onclick="manualUpdateYAxis()" min="-20" max="0" disabled>
         </form>
       </div>
       <div id="control_div">
@@ -347,7 +347,6 @@ window.onload = start;
           <input id="Leak7Bar" type="range" name="Leak7Bar" onclick="updateText(this,document.getElementById('Leak7Text'))" min="0" max="50"><br>
         </form>
         <button type="button" onclick="resetToDefault()">Start with Default Values</button>
-        <button type="button" onclick="test()">test!</button>
       </div>
     </div>
 
